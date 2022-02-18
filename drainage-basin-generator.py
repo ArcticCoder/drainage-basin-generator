@@ -4,12 +4,31 @@ from PIL import Image
 import random
 
 inputPath = "test.png"
-pathCount = 10**6
+pathCount = 10**5
 outputPath = f"test-{pathCount}.png"
 
 inputImage = Image.open(inputPath)
-inputGreyscale = list(inputImage.getdata())
 width, height = inputImage.size
+
+inputGreyscale = [0]*width*height
+
+mode = inputImage.mode
+if(mode == "L" or mode == "P"):
+    inputGreyscale = list(inputImage.getdata())
+elif(mode == "RGB" or mode == "RGBA"):
+    rawRGB = list(inputImage.getdata())
+    for i in range(width*height):
+        R,G,B = rawRGB[i]
+        inputGreyscale[i] = (R+G+B)//3
+
+for i in range(width):
+    inputGreyscale[i] = 0
+for i in range(width):
+    inputGreyscale[i+(height-1)*width] = 0
+for i in range(height):
+    inputGreyscale[i*width] = 0
+for i in range(height):
+    inputGreyscale[i*width+width-1] = 0
 
 outputGreyscale = [0]*width*height
 
