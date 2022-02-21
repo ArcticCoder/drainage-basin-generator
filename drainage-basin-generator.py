@@ -6,6 +6,9 @@ import random
 inputPath = "test.png"
 pathCount = 10**5
 perPath = 8
+pixelMax = 255
+pixelMaxI = (2**16)-1
+perPathI = perPath * (pixelMaxI // pixelMax)
 outputPath = f"test-{pathCount}.png"
 
 inputImage = Image.open(inputPath)
@@ -14,7 +17,7 @@ width, height = inputImage.size
 inputGreyscale = [0]*width*height
 
 mode = inputImage.mode
-if(mode == "L" or mode == "P"):
+if(mode == "L" or mode == "P" or mode == "I"):
     inputGreyscale = list(inputImage.getdata())
 elif(mode == "RGB"):
     rawRGB = list(inputImage.getdata())
@@ -53,7 +56,10 @@ for i in range(pathCount):
     prevDy = 0
     while True:
         visited.add(pixelpos)
-        outputGreyscale[pixelpos] = min((outputGreyscale[pixelpos] + perPath), 256)
+        if mode == "I":
+            outputGreyscale[pixelpos] = min((outputGreyscale[pixelpos] + perPathI), pixelMaxI)
+        else:
+            outputGreyscale[pixelpos] = min((outputGreyscale[pixelpos] + perPath), pixelMax)
 
         if(inputGreyscale[pixelpos] == 0):
             break
