@@ -4,7 +4,7 @@ from PIL import Image
 import random
 
 inputPath = "test.png"
-pathCount = 10**5
+pathCount = 10**4
 outputPath = f"test-{pathCount}.png"
 
 inputImage = Image.open(inputPath)
@@ -15,10 +15,15 @@ inputGreyscale = [0]*width*height
 mode = inputImage.mode
 if(mode == "L" or mode == "P"):
     inputGreyscale = list(inputImage.getdata())
-elif(mode == "RGB" or mode == "RGBA"):
+elif(mode == "RGB"):
     rawRGB = list(inputImage.getdata())
     for i in range(width*height):
         R,G,B = rawRGB[i]
+        inputGreyscale[i] = (R+G+B)//3
+elif(mode == "RGBA"):
+    rawRGB = list(inputImage.getdata())
+    for i in range(width*height):
+        R,G,B,A = rawRGB[i]
         inputGreyscale[i] = (R+G+B)//3
 
 for i in range(width):
@@ -54,9 +59,6 @@ for i in range(pathCount):
         for dx in range(-1,2):
             for dy in range(-1,2):
                 neighbourPos = pixelpos+dy+dx*width
-                if (neighbourPos < 0):
-                    print(pixelpos, dx, dy, width, height)
-                    exit()
                 neighbours.append((inputGreyscale[neighbourPos], neighbourPos))
 
         neighbours.sort()
@@ -69,6 +71,19 @@ for i in range(pathCount):
                 break
         if not validNeighbour:
             break
+
+if(mode == "RGB"):
+    RGB = [(0,0,0)]*width*height
+    for i in range(width*height):
+        x = outputGreyscale[i]
+        RGB[i]= (x,x,x)
+    outputGreyscale = RGB
+elif(mode == "RGBA"):
+    RGBA = [(0,0,0,0)]*width*height
+    for i in range(width*height):
+        x = outputGreyscale[i]
+        RGBA[i]= (x,x,x,255)
+    outputGreyscale = RGBA
 
 inputImage.putdata(outputGreyscale)
 inputImage.save(outputPath)
