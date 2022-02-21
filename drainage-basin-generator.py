@@ -4,7 +4,8 @@ from PIL import Image
 import random
 
 inputPath = "test.png"
-pathCount = 10**4
+pathCount = 10**5
+perPath = 8
 outputPath = f"test-{pathCount}.png"
 
 inputImage = Image.open(inputPath)
@@ -48,9 +49,11 @@ for i in range(pathCount):
             break
 
     visited = set()
+    prevDx = 0
+    prevDy = 0
     while True:
         visited.add(pixelpos)
-        outputGreyscale[pixelpos] = min((outputGreyscale[pixelpos] + 16), 256)
+        outputGreyscale[pixelpos] = min((outputGreyscale[pixelpos] + perPath), 256)
 
         if(inputGreyscale[pixelpos] == 0):
             break
@@ -59,14 +62,29 @@ for i in range(pathCount):
         for dx in range(-1,2):
             for dy in range(-1,2):
                 neighbourPos = pixelpos+dy+dx*width
-                neighbours.append((inputGreyscale[neighbourPos], neighbourPos))
+                if neighbourPos not in visited:
+                    neighbours.append((inputGreyscale[neighbourPos], neighbourPos, dx, dy))
 
         neighbours.sort()
-        validNeighbour = False
+
+        if len(neighbours) == 0:
+            break
+        minElev,_,_,_ = neighbours[0]
+        neighbours = [(e,p,dx,dy) for e,p,dx,dy in neighbours if e == minElev]
+        angles = []
         for i in range(len(neighbours)):
-            value, pos = neighbours[i]
+            value, pos, dx, dy = neighbours[i]
+            angle = abs(prevDx-dx) + abs(prevDy-dy)
+            angles.append((angle, pos, dx, dy))
+
+        angles.sort()
+        validNeighbour = False
+        for i in range(len(angles)):
+            angle, pos, dx, dy = angles[i]
             if pos not in visited:
                 pixelpos = pos
+                prevDx = dx
+                prevDy = dy
                 validNeighbour = True
                 break
         if not validNeighbour:
