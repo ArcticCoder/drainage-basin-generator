@@ -1,50 +1,54 @@
-import tkinter as tk
+#import tkinter as tk
 
 from PIL import Image
 import random
 
-inputPath = "test.png"
-pathCount = 10**5
-perPath = 8
-pixelMax = 255
-pixelMaxI = (2**16)-1
-perPathI = perPath * (pixelMaxI // pixelMax)
-outputPath = f"test-{pathCount}.png"
+def data_from_image():
+    inputGreyscale = [0]*width*height
 
-inputImage = Image.open(inputPath)
-width, height = inputImage.size
+    if(mode == "L" or mode == "P" or mode == "I"):
+        inputGreyscale = list(img.getdata())
+    elif(mode == "RGB"):
+        rawRGB = list(img.getdata())
+        for i in range(width*height):
+            R,G,B = rawRGB[i]
+            inputGreyscale[i] = (R+G+B)//3
+    elif(mode == "RGBA"):
+        rawRGB = list(img.getdata())
+        for i in range(width*height):
+            R,G,B,A = rawRGB[i]
+            inputGreyscale[i] = (R+G+B)//3
 
-inputGreyscale = [0]*width*height
+    for i in range(width):
+        inputGreyscale[i] = 0
+    for i in range(width):
+        inputGreyscale[i+(height-1)*width] = 0
+    for i in range(height):
+        inputGreyscale[i*width] = 0
+    for i in range(height):
+        inputGreyscale[i*width+width-1] = 0
 
-mode = inputImage.mode
-if(mode == "L" or mode == "P" or mode == "I"):
-    inputGreyscale = list(inputImage.getdata())
-elif(mode == "RGB"):
-    rawRGB = list(inputImage.getdata())
-    for i in range(width*height):
-        R,G,B = rawRGB[i]
-        inputGreyscale[i] = (R+G+B)//3
-elif(mode == "RGBA"):
-    rawRGB = list(inputImage.getdata())
-    for i in range(width*height):
-        R,G,B,A = rawRGB[i]
-        inputGreyscale[i] = (R+G+B)//3
+    return inputGreyscale
 
-for i in range(width):
-    inputGreyscale[i] = 0
-for i in range(width):
-    inputGreyscale[i+(height-1)*width] = 0
-for i in range(height):
-    inputGreyscale[i*width] = 0
-for i in range(height):
-    inputGreyscale[i*width+width-1] = 0
 
-outputGreyscale = [0]*width*height
+def image_from_output(outputGreyscale):
+    if(mode == "RGB"):
+        RGB = [(0,0,0)]*width*height
+        for i in range(width*height):
+            x = outputGreyscale[i]
+            RGB[i]= (x,x,x)
+        outputGreyscale = RGB
+    elif(mode == "RGBA"):
+        RGBA = [(0,0,0,0)]*width*height
+        for i in range(width*height):
+            x = outputGreyscale[i]
+            RGBA[i]= (x,x,x,255)
+        outputGreyscale = RGBA
 
-for i in range(pathCount):
-    if i % 1000 == 0:
-        print(i)
+    img.putdata(outputGreyscale)
 
+
+def drainage_iteration():
     pixelpos = 0
     while True:
         pixelpos = random.randrange(width*height)
@@ -96,21 +100,31 @@ for i in range(pathCount):
         if not validNeighbour:
             break
 
-if(mode == "RGB"):
-    RGB = [(0,0,0)]*width*height
-    for i in range(width*height):
-        x = outputGreyscale[i]
-        RGB[i]= (x,x,x)
-    outputGreyscale = RGB
-elif(mode == "RGBA"):
-    RGBA = [(0,0,0,0)]*width*height
-    for i in range(width*height):
-        x = outputGreyscale[i]
-        RGBA[i]= (x,x,x,255)
-    outputGreyscale = RGBA
+#SETTINGS
+inputPath = "test.png"
+pathCount = 10**4
+perPath = 8
+pixelMax = 255
+pixelMaxI = (2**16)-1
+perPathI = perPath * (pixelMaxI // pixelMax)
+outputPath = f"test-{pathCount}.png"
 
-inputImage.putdata(outputGreyscale)
-inputImage.save(outputPath)
+#LOADING
+img = Image.open(inputPath)
+width, height = img.size
+mode = img.mode
+inputGreyscale = data_from_image()
+outputGreyscale = [0]*width*height
+
+#ITERATIONS
+for i in range(pathCount):
+    if i % 1000 == 0:
+        print(f"{i//1000}K")
+    drainage_iteration()
+
+#OUTPUT
+image_from_output(outputGreyscale)
+img.save(outputPath)
 
 
 #Window definition
