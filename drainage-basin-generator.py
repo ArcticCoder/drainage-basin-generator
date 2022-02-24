@@ -2,6 +2,7 @@
 
 from PIL import Image
 import random
+import ctypes
 
 def data_from_image():
     inputGreyscale = [0]*width*height
@@ -102,7 +103,7 @@ def drainage_iteration():
 
 #SETTINGS
 inputPath = "test.png"
-pathCount = 10**4
+pathCount = int(1.0*10**5)
 perPath = 8
 pixelMax = 255
 pixelMaxI = (2**16)-1
@@ -110,17 +111,27 @@ perPathI = perPath * (pixelMaxI // pixelMax)
 outputPath = f"test-{pathCount}.png"
 
 #LOADING
+libcpp = ctypes.CDLL("./terraingen.so")
 img = Image.open(inputPath)
 width, height = img.size
 mode = img.mode
 inputGreyscale = data_from_image()
 outputGreyscale = [0]*width*height
 
+c_inputGreyscale = (ctypes.c_int * len(inputGreyscale))(*inputGreyscale)
+c_outputGreyscale = (ctypes.c_int * len(outputGreyscale))(*outputGreyscale)
+
 #ITERATIONS
-for i in range(pathCount):
-    if i % 1000 == 0:
-        print(f"{i//1000}K")
-    drainage_iteration()
+#for i in range(pathCount):
+    #if i % 1000 == 0:
+    #    print(f"{i//1000}K")
+#    drainage_iteration()
+#CALL C++-lib for actual processing
+if mode == "I":
+    libcpp.drainage_simulation(c_inputGreyscale, c_outputGreyscale, width, height, pathCount, perPathI, pixelMaxI)
+else:
+    libcpp.drainage_simulation(c_inputGreyscale, c_outputGreyscale, width, height, pathCount, perPath, pixelMax)
+outputGreyscale = list(c_outputGreyscale)
 
 #OUTPUT
 image_from_output(outputGreyscale)
