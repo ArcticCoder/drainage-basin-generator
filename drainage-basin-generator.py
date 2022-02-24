@@ -110,6 +110,7 @@ def run_simulation():
 
 #Window definition
 window = tk.Tk()
+window.minsize(250,160)
 
 #Input filepath
 i_filepath_frm = tk.Frame()
