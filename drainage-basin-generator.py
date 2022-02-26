@@ -2,6 +2,7 @@ import ctypes
 from PIL import Image
 import random
 import tkinter as tk
+import sys
 
 def data_from_image(img, width, height, mode):
     inputGreyscale = [0]*width*height
@@ -77,7 +78,12 @@ def run_simulation():
     perPathI = perPath * (pixelMaxI // pixelMax)
 
     #LOADING
-    libcpp = ctypes.CDLL("./terraingen.so")
+    if sys.platform.startswith("linux"):
+        libcpp = ctypes.CDLL("./terraingen.so")
+    elif sys.platform.startswith("win32"):
+        libcpp = ctypes.CDLL(".\\terraingen.dll")
+    else:
+        raise RuntimeError("Unknow platform (should be windows or linux)")
 
     try:
         img = Image.open(inputPath)
