@@ -77,6 +77,12 @@ def run_simulation():
     pixelMaxI = (2**16)-1
     perPathI = perPath * (pixelMaxI // pixelMax)
 
+    try:
+        use_v2 = v2_bool.get()
+        print(use_v2)
+    except:
+        return
+
     #LOADING
     if sys.platform.startswith("linux"):
         libcpp = ctypes.CDLL("./terraingen.so")
@@ -98,16 +104,11 @@ def run_simulation():
     c_inputGreyscale = (ctypes.c_int * len(inputGreyscale))(*inputGreyscale)
     c_outputGreyscale = (ctypes.c_int * len(outputGreyscale))(*outputGreyscale)
 
-    #ITERATIONS
-    #for i in range(pathCount):
-        #if i % 1000 == 0:
-        #    print(f"{i//1000}K")
-    #    drainage_iteration()
     #CALL C++-lib for actual processing
     if mode == "I":
-        libcpp.drainage_simulation(c_inputGreyscale, c_outputGreyscale, width, height, pathCount, perPathI, pixelMaxI)
+        libcpp.drainage_simulation(c_inputGreyscale, c_outputGreyscale, width, height, pathCount, perPathI, pixelMaxI, use_v2)
     else:
-        libcpp.drainage_simulation(c_inputGreyscale, c_outputGreyscale, width, height, pathCount, perPath, pixelMax)
+        libcpp.drainage_simulation(c_inputGreyscale, c_outputGreyscale, width, height, pathCount, perPath, pixelMax, use_v2)
     outputGreyscale = list(c_outputGreyscale)
 
     #OUTPUT
@@ -127,7 +128,7 @@ i_filepath_frm.pack(fill=tk.X)
 i_filepath_lbl.pack(fill=tk.X)
 i_filepath_ent.pack(fill=tk.X)
 
-#Path count
+#Watershed path count
 path_count_frm = tk.Frame()
 path_count_lbl = tk.Label(path_count_frm, text="Path count:", anchor="w")
 path_count_ent = tk.Entry(path_count_frm, width=30)
@@ -136,7 +137,7 @@ path_count_frm.pack(fill=tk.X)
 path_count_lbl.pack(fill=tk.X)
 path_count_ent.pack(side=tk.LEFT)
 
-#Per path
+#Watershed per path
 per_path_frm = tk.Frame()
 per_path_lbl = tk.Label(per_path_frm, text="Pixel value increase per path (0-255):", anchor="w")
 per_path_ent = tk.Entry(per_path_frm, width=30)
@@ -144,6 +145,13 @@ per_path_ent.insert(0,"8")
 per_path_frm.pack(fill=tk.X)
 per_path_lbl.pack(fill=tk.X)
 per_path_ent.pack(side=tk.LEFT)
+
+#Algorithm selections
+algorithms_frm = tk.Frame()
+v2_bool = tk.IntVar(value=1)
+v2_chk = tk.Checkbutton(algorithms_frm, text="V2 Watershed algorithm", variable = v2_bool)
+algorithms_frm.pack(fill=tk.X)
+v2_chk.pack(side=tk.LEFT)
 
 #RUN-button
 run_btn = tk.Button(text="Run", command=run_simulation)

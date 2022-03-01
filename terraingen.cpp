@@ -11,7 +11,7 @@ typedef std::tuple<int,int,int,int> quad;
 
 extern "C"
 {
-	void drainage_simulation(int* inputGreyscale, int* outputGreyscale, int width, int height, int pathCount, int perPath, int pixelMax)
+	void drainage_simulation(int* inputGreyscale, int* outputGreyscale, int width, int height, int pathCount, int perPath, int pixelMax, bool v2 = true)
 	{
 		static std::mt19937 mt{static_cast<unsigned int>(std::chrono::steady_clock::now().time_since_epoch().count())};
 		static std::uniform_int_distribution<> posRng{ 0, (width*height)-1 };
@@ -46,6 +46,9 @@ extern "C"
 				if(inputGreyscale[pixelpos] == 0)
 					break;
 
+				if(v2)
+					inputGreyscale[pixelpos] += 1;
+
 				std::vector<quad> neighbours;
 				for (int dx{-1}; dx <= 1; ++dx)
 				{
@@ -61,7 +64,11 @@ extern "C"
 
 				if (neighbours.size() == 0)
 					break;
+
 				int minElev = std::get<0>(neighbours[0]);
+
+				if (v2 && minElev >= inputGreyscale[pixelpos])
+					break;
 
 				std::vector<quad> angles;
 				for (quad q : neighbours)
